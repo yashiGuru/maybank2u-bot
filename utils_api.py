@@ -29,7 +29,6 @@ def api_get_init_transactions(aggregator_server, bank_name, bank_code):
         'bank_name': bank_name
     }
     api_url = "{}/api/init_transactions".format(aggregator_server)
-    print("init data--------------------------")
     
     try:
         response = requests.post(api_url, json=data)    
@@ -38,8 +37,6 @@ def api_get_init_transactions(aggregator_server, bank_name, bank_code):
             print(r)
     except BaseException as exception:
         print("Error: ", exception)
-    print("init data--------------------------init_transactions",init_transactions)
-
     return init_transactions
 
 def api_set_init_transactions(aggregator_server, bank_name, bank_code, username, transactions, running_balance):

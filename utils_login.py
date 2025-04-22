@@ -1,12 +1,13 @@
 import subprocess
 import time
-from random import random, randint
 import pyautogui
 pyautogui.FAILSAFE = False
 import os
 import sys
 import base64
+import shutil
 from io import BytesIO
+from random import random, randint
 
 application_path = os.path.dirname(sys.executable)
 if "python.exe" in sys.executable:
@@ -154,9 +155,9 @@ def exit_driver(driver):
     if driver:
         driver.quit()
 
-def remove_cookie(port=9292):
-    import shutil
-    shutil.rmtree(f"C:\\chromeCookie_{port}")
+# def remove_cookie(port=9292):
+#     import shutil
+#     shutil.rmtree(f"C:\\chromeCookie_{port}")
 
 def check_captcha():
     ret = False

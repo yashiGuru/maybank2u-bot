@@ -33,21 +33,18 @@ if __name__ == "__main__":
 
     while(1):       
         ret, chrome, login_btn_pos = utils_login.start_chrome_home(url, port) # uncomment Version 1
-        print("ret", ret)
-        print("chrome", chrome)
-        print("login_btn_pos", login_btn_pos)
         if ret and utils_login.do_login(username, password, login_btn_pos) and utils_login.is_logined(1): # use always
             print(":login successed ----------------------")
             driver = utils.attach_driver_go_page(account_name, port)
             print(":1 attached chrome driver ----------------------")
 
-            utils.run_transactions(driver, aggregator_server, bank_name, bank_code, account_name, username, action_wait, limit_pages)
+            utils.run_transactions(driver, aggregator_server, bank_name, bank_code, account_name, username, action_wait, limit_pages, port, chrome)
             print(":2 attached chrome driver ----------------------")
 
             utils_login.exit_driver(driver)
             utils_login.exit_chrome(chrome)    
-            # time.sleep(2)
-            # utils_login.remove_cookie(port)        
+            time.sleep(2)
+            utils_login.remove_cookie(port)        
             # utils_login.remove_cookie()  # uncomment in Version 2
             # break                          # uncomment in Version 1
         else:

@@ -4,11 +4,11 @@
   "username": "Rwgadget",
   "password": "TeeR@n74",
   "account_name": "CCA SME FIRST",
-  "aggregator_server1":  "http://mbbbot.maxapex.net/",
-  "aggregator_server":  "http://localhost:8001/",
+  "aggregator_server1": "http://mbbbot.maxapex.net/",
+  "aggregator_server": "http://localhost:8001/",
   "url": "https://www.maybank2u.com",
   "action_wait": 15,
-  "debug": true, 
-  "limit_pages": 10, 
+  "debug": true,
+  "limit_pages": 10,
   "port": 9222
 }

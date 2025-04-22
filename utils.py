@@ -1,14 +1,19 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import time
-from random import random, randint
-import re
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from bs4 import BeautifulSoup
 from datetime import datetime
+from random import random, randint
+
+import time
+import re
 import requests
 import os
 import logging
 import utils_click
+import utils_login
+import sys
 
 os.environ['WDM_LOG'] = str(logging.NOTSET)
 os.environ['WDM_PROGRESS_BAR'] = str(0)
@@ -129,7 +134,9 @@ def parse_transaction(driver):
             sub_data = [dt, detail, amount]
             table_data.append(sub_data)        
     except:
-        print(f"Erorr while get table data")
+        print(f"Erorr while get table data Wait for 5 minutes")
+        # Wait for 5 minutes
+        time.sleep(300)  
         table_data = None
         pass
 
@@ -137,13 +144,25 @@ def parse_transaction(driver):
 
 def click_check_recaptcha_resume(driver):
     try:
-        # Switch to the reCAPTCHA iframe
-        recaptcha_iframe = driver.find_element(By.XPATH, "//iframe[contains(@src, 'recaptcha')]")
-        driver.switch_thttpo.frame(recaptcha_iframe)
+       # Wait for and switch to the reCAPTCHA iframe
+        WebDriverWait(driver, 10).until(
+            EC.frame_to_be_available_and_switch_to_it((By.XPATH, "//iframe[contains(@src, 'recaptcha')]"))
+        )
 
-        # Locate the checkbox and click it
-        recaptcha_checkbox = driver.find_element(By.ID, "recaptcha-anchor")
+        # Wait for and click the reCAPTCHA checkbox
+        recaptcha_checkbox = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.ID, "recaptcha-anchor"))
+        )
         recaptcha_checkbox.click()
+        # # Wait for CAPTCHA to be solved (Resume button enabled)
+        # WebDriverWait(driver, 300).until(
+        #     EC.element_to_be_clickable((By.XPATH, '//button[.//span[text()="Resume"]]'))
+        # )
+
+        # # Click Resume
+        # resume_btn = driver.find_element(By.XPATH, '//button[.//span[text()="Resume"]]')
+        # resume_btn.click()
+
 
         # Switch back to the main content
         driver.switch_to.default_content()
@@ -159,7 +178,7 @@ def check_captcha_modal(driver):
     
     return modal
 
-def check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code):
+def check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
     ret = False
     modal =  check_captcha_modal(driver)
     if modal is not None:
@@ -171,9 +190,25 @@ def check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code):
         img_b64 = driver.get_screenshot_as_base64()
         if img_b64:
             utils_api.api_send_alarm(aggregator_server, bank_name, bank_code, 'captcha', img_b64)
+
         ret = True
 
-        # click_check_recaptcha_resume(driver)
+        print("ACTION: Attempting to click captcha and resume...")
+        click_check_recaptcha_resume(driver)
+
+        print("ACTION: Wait for 30 seconds before exit")
+        time.sleep(30)
+
+        print("Exiting: Closing driver...")
+        utils_login.exit_driver(driver)
+
+        print("Exiting: Killing Chrome...")
+        utils_login.exit_chrome(chrome)
+
+        print("Exiting: Removing cookies...")
+        utils_login.remove_cookie(port)
+
+        sys.exit("Bot exited due to CAPTCHA.")  # Proper exit
 
     return ret
 
@@ -212,7 +247,7 @@ def logout(driver):
     time.sleep(1 + random()*2)
 
 # Main Process
-def run_transactions(driver, aggregator_server, bank_name, bank_code, account_name, username, action_wait=20, limit_pages=10):
+def run_transactions(driver, aggregator_server, bank_name, bank_code, account_name, username, action_wait=20, limit_pages=10, port=9222, chrome = None):
     start_data = []
     start_data = utils_api.api_get_init_transactions(aggregator_server, bank_name, bank_code)
     if len(start_data) == 0:            
@@ -253,7 +288,7 @@ def run_transactions(driver, aggregator_server, bank_name, bank_code, account_na
             #     logout()
             #     break
         try:
-            if check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code):
+            if check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
                 time.sleep(3 + random())
                 break
                 # break # uncomment in Version 1
@@ -307,7 +342,7 @@ def run_transactions(driver, aggregator_server, bank_name, bank_code, account_na
                 print("Sent data, so waiting", action_sec, " seconds...")
                 sec = 0
                 while sec < action_sec:
-                    if check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code):
+                    if check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
                         break
                     time.sleep(1)
                     sec += 1
@@ -321,7 +356,7 @@ def run_transactions(driver, aggregator_server, bank_name, bank_code, account_na
                 print("NO updated the transactions, so waiting", action_sec, " seconds...")
                 sec = 0
                 while sec < action_sec:
-                    if check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code):
+                    if check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
                         break
                     time.sleep(1)
                     sec += 1
