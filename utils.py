@@ -178,39 +178,75 @@ def check_captcha_modal(driver):
     
     return modal
 
+def is_session_expired(driver):
+    try:
+        # Check if specific element exists that indicates session expiration
+        expired_text = driver.find_element(By.XPATH, "//span[contains(text(), 'Your session has expired')]")
+        return expired_text is not None
+    except:
+        return False
+
+def terminate_bot(driver, chrome, port):
+    print("CAPTCHA not solved. Exiting in 5 minutes...")
+    time.sleep(300)  # Wait for 5 minutes
+
+    print("Closing driver...")
+    utils_login.exit_driver(driver)
+
+    print("Killing Chrome process...")
+    utils_login.exit_chrome(chrome)
+
+    print("Removing cookies...")
+    utils_login.remove_cookie(port)
+
+    sys.exit("Bot exited due to unsolved CAPTCHA.")
+
+
+def handle_captcha_resolution_and_session_check(driver, chrome, port):
+    """
+    Waits for CAPTCHA modal to be resolved. Checks if session is still valid.
+    
+    Returns:
+        True  - if CAPTCHA is resolved and session is active
+        False - if CAPTCHA not resolved or session expired
+    """
+    for i in range(35):
+        time.sleep(1)
+
+        if check_captcha_modal(driver) is None:
+            print("Captcha modal closed. Checking if session is valid...")
+
+            if is_session_expired(driver):
+                print("Session expired after CAPTCHA. Returning False.")
+                terminate_bot(driver, chrome, port)
+                return False  # ❌ CAPTCHA was resolved but session expired
+
+            print("Captcha resolved and session active. Continuing.")
+            return True  # ✅ CAPTCHA resolved and session valid
+
+    print("Captcha modal still open after 35 seconds. CAPTCHA not resolved.")
+    terminate_bot(driver, chrome, port)
+    return False
+
+
 def check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
-    ret = False
-    modal =  check_captcha_modal(driver)
+    modal = check_captcha_modal(driver)
+
     if modal is not None:
+        print(f"ACTION: Found Captcha Modal")
 
-        # with open('page_source.html', 'w', encoding='utf-8') as file:
-        #     file.write(driver.page_source)
-
-        print(f"ACTION: Found Captcha Modal, so exit the bot")
         img_b64 = driver.get_screenshot_as_base64()
         if img_b64:
             utils_api.api_send_alarm(aggregator_server, bank_name, bank_code, 'captcha', img_b64)
 
-        ret = True
+        # print("ACTION: Attempting to click captcha and resume...")
+        # captcha_solved = click_check_recaptcha_resume(driver)
+        
+        # Wait and handle CAPTCHA resolution + session check
+        return handle_captcha_resolution_and_session_check(driver, chrome, port)
 
-        print("ACTION: Attempting to click captcha and resume...")
-        click_check_recaptcha_resume(driver)
+    return True
 
-        print("ACTION: Wait for 30 seconds before exit")
-        time.sleep(30)
-
-        print("Exiting: Closing driver...")
-        utils_login.exit_driver(driver)
-
-        print("Exiting: Killing Chrome...")
-        utils_login.exit_chrome(chrome)
-
-        print("Exiting: Removing cookies...")
-        utils_login.remove_cookie(port)
-
-        sys.exit("Bot exited due to CAPTCHA.")  # Proper exit
-
-    return ret
 
 '''
 -1: not find
@@ -288,10 +324,11 @@ def run_transactions(driver, aggregator_server, bank_name, bank_code, account_na
             #     logout()
             #     break
         try:
-            if check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
-                time.sleep(3 + random())
+            if not check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
+                print("CAPTCHA not resolved, exiting bot loop")
                 break
-                # break # uncomment in Version 1
+            else:
+                time.sleep(3 + random())
 
             if pages >= limit_pages:
                 print(f"there is no match data till {limit_pages} pages")
@@ -342,8 +379,8 @@ def run_transactions(driver, aggregator_server, bank_name, bank_code, account_na
                 print("Sent data, so waiting", action_sec, " seconds...")
                 sec = 0
                 while sec < action_sec:
-                    if check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
-                        break
+                    if not check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
+                        return
                     time.sleep(1)
                     sec += 1
                 if sec >= action_sec:
@@ -356,8 +393,8 @@ def run_transactions(driver, aggregator_server, bank_name, bank_code, account_na
                 print("NO updated the transactions, so waiting", action_sec, " seconds...")
                 sec = 0
                 while sec < action_sec:
-                    if check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
-                        break
+                    if not check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, port, chrome):
+                        return
                     time.sleep(1)
                     sec += 1
                 if sec >= action_sec:
