@@ -187,8 +187,8 @@ def is_session_expired(driver):
         return False
 
 def terminate_bot(driver, chrome, port):
-    print("CAPTCHA not solved. Exiting in 5 minutes...")
-    time.sleep(300)  # Wait for 5 minutes
+    print("CAPTCHA not solved. Exiting in 1 minutes...")
+    time.sleep(60)  # Wait for 1 minutes
 
     print("Closing driver...")
     utils_login.exit_driver(driver)
