@@ -134,9 +134,9 @@ def parse_transaction(driver):
             sub_data = [dt, detail, amount]
             table_data.append(sub_data)        
     except:
-        print(f"Erorr while get table data Wait for 5 minutes")
-        # Wait for 5 minutes
-        time.sleep(300)  
+        print(f"Erorr while get table data Wait for 30 Seconds")
+        # Wait for 30 Seconds
+        time.sleep(30) 
         table_data = None
         pass
 
