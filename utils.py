@@ -186,7 +186,12 @@ def is_session_expired(driver):
     except:
         return False
 
-def terminate_bot(driver, chrome, port):
+def terminate_bot(driver, chrome, port, aggregator_server, bank_name, bank_code):
+    time.sleep(2)
+    img_b64 = driver.get_screenshot_as_base64()
+    if img_b64:
+        utils_api.api_send_alarm(aggregator_server, bank_name, bank_code, 'logout', img_b64)
+
     print("CAPTCHA not solved. Exiting in 1 minutes...")
     time.sleep(60)  # Wait for 1 minutes
 
@@ -202,7 +207,7 @@ def terminate_bot(driver, chrome, port):
     sys.exit("Bot exited due to unsolved CAPTCHA.")
 
 
-def handle_captcha_resolution_and_session_check(driver, chrome, port):
+def handle_captcha_resolution_and_session_check(driver, chrome, port, aggregator_server, bank_name, bank_code):
     """
     Waits for CAPTCHA modal to be resolved. Checks if session is still valid.
     
@@ -218,14 +223,14 @@ def handle_captcha_resolution_and_session_check(driver, chrome, port):
 
             if is_session_expired(driver):
                 print("Session expired after CAPTCHA. Returning False.")
-                terminate_bot(driver, chrome, port)
+                terminate_bot(driver, chrome, port, aggregator_server, bank_name, bank_code)
                 return False  # ❌ CAPTCHA was resolved but session expired
 
             print("Captcha resolved and session active. Continuing.")
             return True  # ✅ CAPTCHA resolved and session valid
 
     print("Captcha modal still open after 35 seconds. CAPTCHA not resolved.")
-    terminate_bot(driver, chrome, port)
+    terminate_bot(driver, chrome, port, aggregator_server, bank_name, bank_code)
     return False
 
 
@@ -243,7 +248,7 @@ def check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, por
         # captcha_solved = click_check_recaptcha_resume(driver)
         
         # Wait and handle CAPTCHA resolution + session check
-        return handle_captcha_resolution_and_session_check(driver, chrome, port)
+        return handle_captcha_resolution_and_session_check(driver, chrome, port, aggregator_server, bank_name, bank_code)
 
     return True
 
