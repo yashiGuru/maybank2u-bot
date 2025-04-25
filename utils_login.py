@@ -4,6 +4,7 @@ import pyautogui
 pyautogui.FAILSAFE = False
 import os
 import sys
+import stat
 import base64
 import shutil
 from io import BytesIO
@@ -12,7 +13,7 @@ from random import random, randint
 application_path = os.path.dirname(sys.executable)
 if "python.exe" in sys.executable:
     application_path = "."
-print("applicaton path:", application_path)
+print("application path:", application_path)
 
 login_yellow_path   = os.path.join(application_path, 'im_login_yellow.png')
 ok_green_path       = os.path.join(application_path, 'im_ok_green.png')
