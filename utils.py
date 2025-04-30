@@ -6,6 +6,8 @@ from bs4 import BeautifulSoup
 from datetime import datetime
 from random import random, randint
 
+from src.bot_monitoring.screen_checks import is_session_timeout_url
+
 import time
 import re
 import requests
@@ -101,7 +103,7 @@ def get_current_balance(driver):
     print("current_balance", current_balance)        
     return available_balance, current_balance
 
-def parse_transaction(driver):
+def parse_transaction(driver, chrome, port, aggregator_server, bank_name, bank_code):
     print(f"ACTION: Parse transaction table")
     def remove_excess_whitespace(x):
         x = x.replace("\t", " ")
@@ -134,10 +136,15 @@ def parse_transaction(driver):
             sub_data = [dt, detail, amount]
             table_data.append(sub_data)        
     except:
-        print(f"Erorr while get table data Wait for 30 Seconds")
+        print(f"While get table data Wait for 30 Seconds")
         # Wait for 30 Seconds
         time.sleep(30) 
         table_data = None
+        
+        current_url = driver.current_url  # Assuming you're using Selenium
+        if is_session_timeout_url(current_url):
+            print("🔒 Session timed out. Logging out.")
+            terminate_bot(driver, chrome, port, aggregator_server, bank_name, bank_code)
         pass
 
     return table_data
@@ -295,7 +302,7 @@ def run_transactions(driver, aggregator_server, bank_name, bank_code, account_na
         clicked_row_index, balance = utils_click.get_init_data(driver)
         if clicked_row_index is None:
             return
-        new_data = parse_transaction(driver)
+        new_data = parse_transaction(driver, chrome, port, aggregator_server, bank_name, bank_code)
     
         if int(clicked_row_index) + 5 <= len(new_data):
             start_data = new_data[clicked_row_index:clicked_row_index+5]
@@ -354,7 +361,7 @@ def run_transactions(driver, aggregator_server, bank_name, bank_code, account_na
             #     time.sleep(5 + random())
             #     continue
 
-            new_data = parse_transaction(driver)
+            new_data = parse_transaction(driver, chrome, port, aggregator_server, bank_name, bank_code)
             if new_data is None: # Get Error while parsing table
                 refresh_transactions(driver, account_name)
                 table_data = []

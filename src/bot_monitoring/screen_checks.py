@@ -55,3 +55,10 @@ def start_bot_with_dashboard_check(driver):
     except Exception as e:
         print(f"💥 Unexpected error: {e}")
         return False
+
+def is_session_timeout_url(url: str) -> bool:
+    """
+    Checks if the provided URL is the Maybank2u session timeout logout URL.
+    """
+    expected_url = "https://www.maybank2u.com.my/home/m2u/common/logout?sessionTimeout=true"
+    return url.strip().lower() == expected_url.lower()

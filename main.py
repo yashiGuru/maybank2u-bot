@@ -1,7 +1,7 @@
 import time
 import sys
-import utils
 
+from utils import attach_driver_go_page, run_transactions
 from utils_login import get_screenshot_b64, exit_driver, exit_chrome, remove_cookie
 from utils_api import api_send_alarm
 
@@ -46,8 +46,8 @@ def main():
     # 4) Proceed with your transaction logic
     print("🚀 Login succeeded, starting transaction run...")
     try:
-        utils.attach_driver_go_page(ACCOUNT_NAME, PORT)
-        utils.run_transactions(
+        attach_driver_go_page(ACCOUNT_NAME, PORT)
+        run_transactions(
             driver,
             AGGREGATOR_SERVER,
             BANK_NAME, 
