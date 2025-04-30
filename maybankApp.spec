@@ -2,7 +2,7 @@
 
 
 a = Analysis(
-    ['maybank_bot.py'],
+    ['main.py'],
     pathex=[],
     binaries=[],
     datas=[('settings.json', '.'), ('im_account_tool.png', '.'), ('im_captcha.png', '.'), ('im_login_green.png', '.'), ('im_login_yellow.png', '.'), ('im_logout_black.png', '.'), ('im_ok_green.png', '.')],

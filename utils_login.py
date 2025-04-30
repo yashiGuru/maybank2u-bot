@@ -146,7 +146,7 @@ def remove_readonly(func, path, _):
     func(path)
 
 def remove_cookie(port):
-    cookie_dir = f"C:\\chromeCookie_{port}"
+    cookie_dir = f"C:\\chrome_profiles\\bot_{port}"
     try:
         shutil.rmtree(cookie_dir, onerror=remove_readonly)
     except Exception as e:
