@@ -57,7 +57,7 @@ def start_bot_with_dashboard_check(driver):
         print(f"💥 Unexpected error: {e}")
         return False
 
-def is_session_timeout_url(driver, AGGREGATOR_SERVER, BANK_NAME, BANK_CODE):
+def is_session_timeout_url(driver):
     """
     Checks if the current URL indicates a session timeout and sends an alarm if it does.
     """
