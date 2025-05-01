@@ -9,8 +9,6 @@ from src.drivers.driver_setup import create_driver, start_chrome_home
 from src.bot_monitoring.screen_checks import start_bot_with_dashboard_check
 from src.utils.constant import BANK_URL, PORT, AGGREGATOR_SERVER, ACTION_WAIT, LIMIT_PAGES, BANK_NAME, BANK_CODE, USERNAME, ACCOUNT_NAME, ALARM_TYPE
 
-print(ALARM_TYPE)
-print(ALARM_TYPE.LOGIN_FAILURE)
 def main():
     # 1) Launch Chrome via PyAutoGUI + subprocess
     ret, chrome = start_chrome_home(BANK_URL, PORT)
@@ -27,11 +25,15 @@ def main():
         sys.exit(1)
 
     # 3) Wait for dashboard to load
+    login_page_screenshot = driver.get_screenshot_as_base64()
+    if login_page_screenshot:
+        api_send_alarm(AGGREGATOR_SERVER, BANK_NAME, BANK_CODE, ALARM_TYPE.LOGIN_PAGE, login_page_screenshot)
+
     is_login = start_bot_with_dashboard_check(driver)
     if not is_login:
-        image_screenshot = get_screenshot_b64()
-        if image_screenshot:
-            api_send_alarm(AGGREGATOR_SERVER, BANK_NAME, BANK_CODE, ALARM_TYPE.LOGIN_FAILURE, image_screenshot)
+        login_not_filled_screenshot = get_screenshot_b64()
+        if login_not_filled_screenshot:
+            api_send_alarm(AGGREGATOR_SERVER, BANK_NAME, BANK_CODE, ALARM_TYPE.LOGIN_NOT_FILLED, login_not_filled_screenshot)
         print("❌ Dashboard never appeared. Exiting due to login failure.")
         print("Closing driver...")
         exit_driver(driver)
@@ -42,6 +44,10 @@ def main():
         print("Removing cookies...")
         remove_cookie(PORT)
         sys.exit("Bot exited due to login failure.")
+
+    login_success_screenshot = driver.get_screenshot_as_base64()
+    if login_success_screenshot:
+        api_send_alarm(AGGREGATOR_SERVER, BANK_NAME, BANK_CODE, ALARM_TYPE.LOGIN_SUCCESS, login_success_screenshot)
 
     # 4) Proceed with your transaction logic
     print("🚀 Login succeeded, starting transaction run...")

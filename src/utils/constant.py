@@ -39,6 +39,13 @@ ACCOUNT_TOOL_IMG   = os.path.join(ASSETS_DIR, "im_account_tool.png")
 CAPTCHA_IMG        = os.path.join(ASSETS_DIR, "im_captcha.png")
 
 class ALARM_TYPE:
-    LOGIN_FAILURE = 'login'
+    LOGIN_FAILURE = "login"
+    LOGIN_PAGE = "login_page"
+    LOGIN_NOT_FILLED = "login_not_filled"
+    LOGIN_SUCCESS = "login_success"
     LOGOUT = 'logout'
     CAPTCHA = 'captcha'
+    CAPTCHA_SOLVED = "captcha_solved"
+    CAPTCHA_FAILED = "captcha_failed"
+    CAPTCHA_NOT_FILLED = "captcha_not_filled"
+    SESSION_TIMEOUT = "session_timeout"

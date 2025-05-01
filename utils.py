@@ -7,6 +7,7 @@ from datetime import datetime
 from random import random, randint
 
 from src.bot_monitoring.screen_checks import is_session_timeout_url
+from src.utils.constant import ALARM_TYPE
 
 import time
 import re
@@ -195,11 +196,11 @@ def is_session_expired(driver):
 
 def terminate_bot(driver, chrome, port, aggregator_server, bank_name, bank_code):
     time.sleep(2)
-    img_b64 = driver.get_screenshot_as_base64()
-    if img_b64:
-        utils_api.api_send_alarm(aggregator_server, bank_name, bank_code, 'logout', img_b64)
+    page_logout_screenshot = driver.get_screenshot_as_base64()
+    if page_logout_screenshot:
+        utils_api.api_send_alarm(aggregator_server, bank_name, bank_code, ALARM_TYPE.LOGOUT, page_logout_screenshot)
 
-    print("CAPTCHA not solved. Exiting in 1 minutes...")
+    print("Exiting in 1 minutes...")
     time.sleep(60)  # Wait for 1 minutes
 
     print("Closing driver...")
@@ -230,9 +231,17 @@ def handle_captcha_resolution_and_session_check(driver, chrome, port, aggregator
 
             if is_session_expired(driver):
                 print("Session expired after CAPTCHA. Returning False.")
+
+                captcha_not_filled = driver.get_screenshot_as_base64()
+                if captcha_not_filled:
+                    utils_api.api_send_alarm(aggregator_server, bank_name, bank_code, ALARM_TYPE.CAPTCHA_NOT_FILLED, captcha_not_filled)
                 terminate_bot(driver, chrome, port, aggregator_server, bank_name, bank_code)
+                
                 return False  # ❌ CAPTCHA was resolved but session expired
 
+            captcha_solve_screenshot = driver.get_screenshot_as_base64()
+            if captcha_solve_screenshot:
+                utils_api.api_send_alarm(aggregator_server, bank_name, bank_code, ALARM_TYPE.CAPTCHA_SOLVED, captcha_solve_screenshot)
             print("Captcha resolved and session active. Continuing.")
             return True  # ✅ CAPTCHA resolved and session valid
 
@@ -247,9 +256,9 @@ def check_captcha_and_alarm(driver, aggregator_server, bank_name, bank_code, por
     if modal is not None:
         print(f"ACTION: Found Captcha Modal")
 
-        img_b64 = driver.get_screenshot_as_base64()
-        if img_b64:
-            utils_api.api_send_alarm(aggregator_server, bank_name, bank_code, 'captcha', img_b64)
+        captcha_model_screenshot = driver.get_screenshot_as_base64()
+        if captcha_model_screenshot:
+            utils_api.api_send_alarm(aggregator_server, bank_name, bank_code, ALARM_TYPE.CAPTCHA, captcha_model_screenshot)
 
         # print("ACTION: Attempting to click captcha and resume...")
         # captcha_solved = click_check_recaptcha_resume(driver)
