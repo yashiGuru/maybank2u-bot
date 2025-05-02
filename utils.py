@@ -142,8 +142,7 @@ def parse_transaction(driver, chrome, port, aggregator_server, bank_name, bank_c
         time.sleep(30) 
         table_data = None
         
-        current_url = driver.current_url  # Assuming you're using Selenium
-        if is_session_timeout_url(current_url):
+        if is_session_timeout_url(driver):
             print("🔒 Session timed out. Logging out.")
             terminate_bot(driver, chrome, port, aggregator_server, bank_name, bank_code)
         pass
